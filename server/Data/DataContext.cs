@@ -9,5 +9,14 @@ public class DataContext : DbContext
     {
     }
 
-    public DbSet<TextModel> TextModels => Set<TextModel>();
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Meeting> Meetings => Set<Meeting>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Meeting>()
+            .HasMany(m => m.Participants)
+            .WithMany(u => u.Meetings)
+            .UsingEntity(j => j.ToTable("MeetingUsers"));
+    }
 }
