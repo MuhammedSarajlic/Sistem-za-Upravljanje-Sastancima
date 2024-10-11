@@ -7,6 +7,8 @@ import dashboardActive from '../assets/dashboards-active.png';
 import settings from '../assets/settings.png';
 import settingsActive from '../assets/settings-active.png';
 import logout from '../assets/logout.png';
+import notification from '../assets/notification.png';
+import slika from '../assets/slika.jpg';
 
 export default {
   google,
@@ -18,4 +20,6 @@ export default {
   settings,
   settingsActive,
   logout,
+  notification,
+  slika,
 };

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using server.Data;
-using server.Exceptions;
 using server.Models;
 using server.Dtos;
 using server.Response;
