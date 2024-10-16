@@ -9,6 +9,9 @@ import settingsActive from '../assets/settings-active.png';
 import logout from '../assets/logout.png';
 import notification from '../assets/notification.png';
 import slika from '../assets/slika.jpg';
+import arrow from '../assets/arrow.png';
+import event from '../assets/events.png';
+import addUser from '../assets/add-user.png';
 
 export default {
   google,
@@ -22,4 +25,7 @@ export default {
   logout,
   notification,
   slika,
+  arrow,
+  event,
+  addUser,
 };

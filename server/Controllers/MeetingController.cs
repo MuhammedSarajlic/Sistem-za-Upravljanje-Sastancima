@@ -35,6 +35,13 @@ public class MeetingController : ControllerBase
         return meetings;
     }
 
+    [HttpGet]
+    [Route("fetch/user/{userId:guid}/date")]
+    public async Task<List<Meeting>> GetMeetingByUserIdWithDateRange(Guid userId, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    {
+        var meetings = await meetingService.GetMeetingsByUserIdWithDateRange(userId, startDate, endDate);
+        return meetings;
+    }
 
     [HttpPost]
     [Route("create")]

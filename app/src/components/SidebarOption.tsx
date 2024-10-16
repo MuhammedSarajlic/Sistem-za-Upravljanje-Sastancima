@@ -25,7 +25,7 @@ const SidebarOption = ({
       className={`flex items-center p-2 rounded-lg space-x-2 cursor-pointer ${customStyle}`}
     >
       <img src={icon} className='w-5' />
-      <p className={`text-sm font-semibold text-gray-500 ${customTitleStyle}`}>
+      <p className={`text-sm font-semibold text-gray-500 ${customTitleStyle} `}>
         {title}
       </p>
     </Link>

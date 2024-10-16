@@ -31,7 +31,9 @@ const Sidebar = () => {
                   : icons.dashboard
               }
               customStyle={location.pathname === '/' ? ACTIVE_OPTION : ''}
-              customTitleStyle={location.pathname === '/' ? 'text-black' : ''}
+              customTitleStyle={
+                location.pathname === '/' ? 'text-[#000000]' : ''
+              }
               redirectLink=''
             />
             <SidebarOption
@@ -45,7 +47,7 @@ const Sidebar = () => {
                 location.pathname === '/kalendar' ? ACTIVE_OPTION : ''
               }
               customTitleStyle={
-                location.pathname === '/kalendar' ? 'text-black' : ''
+                location.pathname === '/kalendar' ? 'text-[#000000]' : ''
               }
               redirectLink='kalendar'
             />
@@ -66,7 +68,7 @@ const Sidebar = () => {
                 location.pathname === '/postavke' ? ACTIVE_OPTION : ''
               }
               customTitleStyle={
-                location.pathname === '/postavke' ? 'text-black' : ''
+                location.pathname === '/postavke' ? 'text-[#000000]' : ''
               }
               redirectLink='postavke'
             />

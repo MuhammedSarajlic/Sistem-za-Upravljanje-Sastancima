@@ -22,7 +22,9 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
         .then((res) => {
           if (res) {
             setIsLoggedIn(true);
-            setUser(res);
+            setUser(res.data);
+            console.log(res);
+            console.log('sgsdgsdg');
           } else {
             setIsLoggedIn(false);
             setUser(null);

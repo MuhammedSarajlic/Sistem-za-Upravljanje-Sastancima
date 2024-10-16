@@ -28,6 +28,17 @@ public class MeetingService : IMeetingService
         return userMeetings;
     }
 
+    public async Task<List<Meeting>> GetMeetingsByUserIdWithDateRange(Guid userId, DateTime startDate, DateTime endDate)
+    {
+        // Fetch meetings within the date range
+        return await _context.Meetings
+            .Where(m => m.Participants.Any(p => p.Id == userId) && m.StartTime >= startDate && m.StartTime <= endDate)
+            .Include(p => p.Participants)
+            .ToListAsync();
+    }
+
+
+
     public async Task<Meeting> GetMeetingById(Guid meetingId)
     {
         var meeting = await _context.Meetings.Include(p => p.Participants).FirstOrDefaultAsync(m => m.Id == meetingId);
