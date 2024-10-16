@@ -30,14 +30,11 @@ public class MeetingService : IMeetingService
 
     public async Task<List<Meeting>> GetMeetingsByUserIdWithDateRange(Guid userId, DateTime startDate, DateTime endDate)
     {
-        // Fetch meetings within the date range
         return await _context.Meetings
-            .Where(m => m.Participants.Any(p => p.Id == userId) && m.StartTime >= startDate && m.StartTime <= endDate)
+            .Where(m => m.Participants.Any(p => p.Id == userId) && m.StartTime.Date >= startDate && m.StartTime.Date <= endDate)
             .Include(p => p.Participants)
             .ToListAsync();
     }
-
-
 
     public async Task<Meeting> GetMeetingById(Guid meetingId)
     {
