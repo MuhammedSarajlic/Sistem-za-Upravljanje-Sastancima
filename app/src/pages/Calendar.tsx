@@ -5,6 +5,8 @@ import icons from '../constants/icons';
 import { getCurrentUserMeetingsByDate } from '../services/meeting';
 import { useGlobalContext } from '../context/GlobalProvider';
 import { TMeeting } from '../types/types';
+import FormInput from '../components/FormInput';
+import { monthTranslations } from '../constants/months';
 
 const Calendar = () => {
   const currentDate = new Date();
@@ -13,6 +15,8 @@ const Calendar = () => {
   const [weekOffset, setWeekOffset] = useState(0);
   const [userMeetingList, setUserMeetingList] = useState<[] | TMeeting[]>([]);
   const { user } = useGlobalContext();
+  const [isAddEventModalOpen, setIsAddEventModalOpen] =
+    useState<boolean>(false);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -61,11 +65,17 @@ const Calendar = () => {
     });
     const lastYear = lastDayOfWeek.getFullYear();
 
-    if (firstMonth === lastMonth && firstYear === lastYear) {
-      return `${firstMonth} ${firstYear}`;
+    const translatedFirstMonth = monthTranslations[firstMonth] || firstMonth;
+    const translatedLastMonth = monthTranslations[lastMonth] || lastMonth;
+
+    if (
+      translatedFirstMonth === translatedLastMonth &&
+      firstYear === lastYear
+    ) {
+      return `${translatedFirstMonth} ${firstYear}`;
     }
 
-    return `${firstMonth} - ${lastMonth} ${
+    return `${translatedFirstMonth} - ${translatedLastMonth} ${
       firstYear === lastYear ? firstYear : `${firstYear} - ${lastYear}`
     }`;
   };
@@ -146,26 +156,39 @@ const Calendar = () => {
             </div>
             <div className='flex items-center space-x-2'>
               <div className='flex items-center -space-x-1.5'>
-                <div className='w-5 h-5 overflow-hidden bg-blue-600 rounded-full border-[1px] border-white'>
-                  <img
-                    src={icons.slika}
-                    className='w-full h-full object-cover'
-                  />
-                </div>
-                <div className='w-5 h-5 overflow-hidden bg-blue-600 rounded-full border-[1px] border-white'>
-                  <img
-                    src={icons.slika}
-                    className='w-full h-full object-cover'
-                  />
-                </div>
-                <div className='w-5 h-5 overflow-hidden bg-blue-600 rounded-full border-[1px] border-white'>
-                  <img
-                    src={icons.slika}
-                    className='w-full h-full object-cover'
-                  />
-                </div>
+                {location.pathname === '/kalendar' ? (
+                  <div className='w-5 h-5 overflow-hidden bg-blue-600 rounded-full border-[1px] border-white'>
+                    <img
+                      src={icons.slika}
+                      className='w-full h-full object-cover'
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className='w-5 h-5 overflow-hidden bg-blue-600 rounded-full border-[1px] border-white'>
+                      <img
+                        src={icons.slika}
+                        className='w-full h-full object-cover'
+                      />
+                    </div>
+                    <div className='w-5 h-5 overflow-hidden bg-blue-600 rounded-full border-[1px] border-white'>
+                      <img
+                        src={icons.slika}
+                        className='w-full h-full object-cover'
+                      />
+                    </div>
+                    <div className='w-5 h-5 overflow-hidden bg-blue-600 rounded-full border-[1px] border-white'>
+                      <img
+                        src={icons.slika}
+                        className='w-full h-full object-cover'
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-              <p className='text-xs font-medium text-gray-500'>13 Members</p>
+              <p className='text-xs font-medium text-gray-500'>
+                {location.pathname === '/kalendar' ? '1 Member' : '13 Members'}
+              </p>
               <p className='text-gray-500'>⦁</p>
               <div className='flex items-center space-x-1'>
                 <img src={icons.event} className='w-4' />
@@ -176,49 +199,145 @@ const Calendar = () => {
             </div>
           </div>
           <div className='flex items-center space-x-4'>
-            <div className='flex items-center space-x-1 border-[2px] border-blue-600 text-blue-600 px-4 py-1.5 rounded-md cursor-pointer text-center font-medium'>
-              <img src={icons.addUser} className='w-4' />
-              <p>Invite user</p>
+            {location.pathname !== '/kalendar' && (
+              <div className='flex items-center space-x-1 border-[2px] border-blue-600 text-blue-600 px-4 py-1.5 rounded-md cursor-pointer text-center font-medium'>
+                <img src={icons.addUser} className='w-4' />
+                <p>Dodaj korisnika</p>
+              </div>
+            )}
+            <div
+              onClick={() => setIsAddEventModalOpen(!isAddEventModalOpen)}
+              className='border-[2px] border-blue-600 bg-blue-600 px-4 py-1.5 rounded-md text-white cursor-pointer text-center'
+            >
+              Kreiraj događaj
             </div>
-            <div className='border-[2px] border-blue-600 bg-blue-600 px-4 py-1.5 rounded-md text-white cursor-pointer text-center'>
-              Create event
-            </div>
+            {isAddEventModalOpen && (
+              <div className='top-36 right-4 z-50 absolute bg-white rounded-lg py-2 shadow-md border-[1px]'>
+                <div className='flex items-center justify-between space-x-3 px-4 pb-2 border-b-[1px]'>
+                  <div className='flex items-center space-x-3'>
+                    <div className='flex items-center justify-center p-2 border-[1px] rounded-md'>
+                      <img src={icons.addEvent} className='w-5 h-5' />
+                    </div>
+                    <div>
+                      <p className='font-medium'>Kreirajte događaj</p>
+                      <p className='text-sm text-gray-500'>
+                        Unesite podatke da dodate događaj
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    onClick={() => setIsAddEventModalOpen(false)}
+                    className='flex items-center justify-center w-7 h-7 cursor-pointer'
+                  >
+                    <img src={icons.close} className='w-3 h-3' />
+                  </div>
+                </div>
+                <div className='p-4 border-b-[1px] space-y-2'>
+                  <FormInput
+                    inputName='Naziv događaja'
+                    inputType='text'
+                    placeholderText='Unesite naziv događaja'
+                    customStyles={'text-sm outline-none'}
+                  />
+                  <FormInput
+                    inputName='Opis događaja'
+                    inputType='text'
+                    placeholderText='Unesite opis događaja'
+                    customStyles={'text-sm outline-none'}
+                  />
+                  <FormInput
+                    inputName='Datum'
+                    inputType='date'
+                    customStyles={'text-sm outline-none'}
+                  />
+                  <div className='w-full flex space-x-2'>
+                    <div className='w-1/2'>
+                      <FormInput
+                        inputName='Vrijeme početka'
+                        inputType='time'
+                        placeholderText='Unesite opis događaja'
+                        customStyles={'text-sm outline-none w-full'}
+                      />
+                    </div>
+                    <div className='w-1/2'>
+                      <FormInput
+                        inputName='Vrijeme završetka'
+                        inputType='time'
+                        placeholderText='Unesite opis događaja'
+                        customStyles={'text-sm outline-none w-full'}
+                      />
+                    </div>
+                  </div>
+                  <FormInput
+                    inputName='Dodaj učesnike'
+                    inputType='text'
+                    customStyles={'text-sm outline-none'}
+                  />
+                </div>
+                <div className='px-4 pt-2 flex items-center justify-end space-x-2'>
+                  <div
+                    onClick={() => setIsAddEventModalOpen(false)}
+                    className='flex items-center justify-center min-w-[80px] border-[2px] border-blue-600 rounded-lg py-1 text-blue-600 cursor-pointer text-sm font-medium'
+                  >
+                    Otkaži
+                  </div>
+                  <div className='flex items-center justify-center  min-w-[80px] w-[50px] border-[1px] border-blue-600 bg-blue-600 rounded-lg py-1 text-white text-sm font-medium cursor-pointer'>
+                    Dodaj
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         <div className='px-4 py-4'>
           <div className=' relative border-[1px] rounded-lg'>
             {/*Timezone and Days */}
+
             <div className='flex w-full border-b-[1px]'>
               <div className='py-3 min-w-20 flex justify-center'>GMT+2</div>
               {days.map((date, index) => (
                 <div
                   key={index}
-                  className={`py-3 w-full flex justify-center border-l-[1px] space-x-2`}
+                  className={`w-full flex justify-center border-l-[1px] space-x-2 ${
+                    currentDate.getTime() == date.newDate.getTime()
+                      ? 'bg-blue-50'
+                      : ''
+                  }`}
                 >
-                  <span
-                    className={`${
-                      currentDay === date.day
-                        ? 'text-blue-600'
-                        : 'text-gray-500'
-                    }`}
-                  >
-                    {date.dayName}
-                  </span>
                   <div
-                    className={`${
-                      currentDay === date.day ? 'bg-blue-600 rounded-full' : ''
+                    className={`py-3 w-full h-full flex items-center justify-center space-x-2 ${
+                      currentDate.getTime() == date.newDate.getTime()
+                        ? 'border-b-[2px] border-blue-600'
+                        : ''
                     }`}
                   >
                     <span
-                      className={`font-semibold ${
-                        currentDay === date.day
-                          ? 'px-1.5 py-2 text-white text-center'
+                      className={`${
+                        currentDate.getTime() == date.newDate.getTime()
+                          ? 'text-blue-600'
+                          : 'text-gray-500'
+                      }`}
+                    >
+                      {date.dayName}
+                    </span>
+                    <div
+                      className={`${
+                        currentDate.getTime() == date.newDate.getTime()
+                          ? 'bg-blue-600 rounded-full'
                           : ''
                       }`}
                     >
-                      {date.day}
-                    </span>
+                      <span
+                        className={`font-semibold ${
+                          currentDate.getTime() == date.newDate.getTime()
+                            ? 'px-1.5 py-2 text-white text-center'
+                            : ''
+                        }`}
+                      >
+                        {date.day}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -263,7 +382,11 @@ const Calendar = () => {
                     {hours.map((hour, rowIndex) => (
                       <div
                         key={rowIndex}
-                        className='h-[100px] border-b-[1px] relative'
+                        className={`h-[100px] border-b-[1px] relative ${
+                          currentDate.getTime() == date.newDate.getTime()
+                            ? 'bg-blue-50'
+                            : ''
+                        }`}
                       >
                         {userMeetingList.map((meet) => {
                           const meetDate = new Date(meet.startTime);
@@ -281,13 +404,13 @@ const Calendar = () => {
                             return (
                               <div
                                 key={meet.id}
-                                className='overflow-hidden absolute w-full border-[2px] border-blue-500 bg-blue-100 rounded-lg flex-col px-1 space-y-2'
+                                className='z-10 overflow-hidden absolute w-full border-[2px] border-blue-500 bg-blue-100 rounded-lg flex-col px-1 space-y-1'
                                 style={{
                                   top: `${(minutesStart / 60) * 100}%`,
                                   height: `${(durationMinutes / 60) * 100}%`,
                                 }}
                               >
-                                <p className='text-blue-500 text-sm font-medium'>
+                                <p className='text-blue-500 text-sm font-medium line-clamp-2'>
                                   {meet.title}
                                 </p>
                                 <p className='text-xs text-blue-500'>
@@ -321,15 +444,11 @@ const Calendar = () => {
                                         className='w-full h-full object-cover'
                                       />
                                     </div>
-                                    <div className='w-5 h-5 overflow-hidden rounded-full border-[1px] border-blue-100'>
-                                      <img
-                                        src={icons.slika}
-                                        className='w-full h-full object-cover'
-                                      />
+                                    <div className=' h-5 flex items-center justify-center bg-blue-100 overflow-hidden rounded-full border-[1px] border-white'>
+                                      <p className='text-xs text-blue-600 px-1.5'>
+                                        5+
+                                      </p>
                                     </div>
-                                  </div>
-                                  <div className='flex items-center justify-center border-[1px] border-blue-600 rounded-full px-1.5 text-blue-600 text-xs'>
-                                    5+
                                   </div>
                                 </div>
                               </div>

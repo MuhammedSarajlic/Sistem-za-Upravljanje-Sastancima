@@ -12,6 +12,8 @@ import slika from '../assets/slika.jpg';
 import arrow from '../assets/arrow.png';
 import event from '../assets/events.png';
 import addUser from '../assets/add-user.png';
+import close from '../assets/close.png';
+import addEvent from '../assets/add-event.png';
 
 export default {
   google,
@@ -28,4 +30,6 @@ export default {
   arrow,
   event,
   addUser,
+  close,
+  addEvent,
 };
