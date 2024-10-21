@@ -23,7 +23,20 @@ export type TMeeting = {
       name: string;
     }
   ];
-  participantsIds: [string];
+  participantsIds: [];
   startTime: string;
   title: string;
+};
+
+export type TNewEvent = {
+  title?: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  participantsIds?: [string];
+  participants?: [
+    {
+      id: string;
+    }
+  ];
 };

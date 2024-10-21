@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { dayNames } from '../constants/days';
 import icons from '../constants/icons';
-import { getCurrentUserMeetingsByDate } from '../services/meeting';
+import { addNewEvent, getCurrentUserMeetingsByDate } from '../services/meeting';
 import { useGlobalContext } from '../context/GlobalProvider';
-import { TMeeting } from '../types/types';
+import { TMeeting, TNewEvent, TUser } from '../types/types';
 import FormInput from '../components/FormInput';
 import { monthTranslations } from '../constants/months';
+import { findUserByEmail } from '../services/user';
 
 const Calendar = () => {
   const currentDate = new Date();
@@ -17,6 +18,16 @@ const Calendar = () => {
   const { user } = useGlobalContext();
   const [isAddEventModalOpen, setIsAddEventModalOpen] =
     useState<boolean>(false);
+  const [newEvent, setNewEvent] = useState<TNewEvent>({
+    title: '',
+    description: '',
+    startTime: '',
+    endTime: '',
+    participantsIds: [],
+    participants: [],
+  });
+  const [searchedUsers, setSearchedUsers] = useState<TUser[] | []>([]);
+  const [query, setQuery] = useState<string>('');
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -105,8 +116,84 @@ const Calendar = () => {
     setUserMeetingList(res.data);
   };
 
+  const combineDateAndTime = (date: string, time: string) => {
+    if (!time) return '';
+    return `${date}T${time}:00`;
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const date = e.target.value;
+
+    setNewEvent((prevEvent) => ({
+      ...prevEvent,
+      startTime: combineDateAndTime(
+        date,
+        prevEvent.startTime.split('T')[1] || '00:00'
+      ),
+      endTime: combineDateAndTime(
+        date,
+        prevEvent.endTime.split('T')[1] || '00:00'
+      ),
+    }));
+  };
+
+  const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = e.target.value;
+    if (newEvent.startTime) {
+      const date = newEvent.startTime.split('T')[0];
+      setNewEvent((prevEvent) => ({
+        ...prevEvent,
+        startTime: combineDateAndTime(date, time),
+      }));
+    }
+  };
+
+  const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = e.target.value;
+    if (newEvent.endTime) {
+      const date = newEvent.endTime.split('T')[0];
+      setNewEvent((prevEvent) => ({
+        ...prevEvent,
+        endTime: combineDateAndTime(date, time),
+      }));
+    }
+  };
+
+  const findParticipants = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value != '') {
+      setQuery(e.target.value);
+      const res = await findUserByEmail(e.target.value);
+      setSearchedUsers(res.data);
+    } else {
+      setQuery('');
+      setSearchedUsers([]);
+    }
+  };
+
+  const handleAddParticipant = (user: TUser) => {
+    setNewEvent((prevEvent) => {
+      if (prevEvent && !prevEvent.participantsIds.includes(user.id)) {
+        return {
+          ...prevEvent,
+          participantsIds: [...prevEvent.participantsIds, user.id],
+          participants: [...prevEvent.participants, user],
+        };
+      }
+    });
+    setQuery('');
+    setSearchedUsers([]);
+  };
+
+  const handleAddNewEvent = async () => {
+    const res = await addNewEvent(newEvent);
+    console.log(res);
+    if (res.status === 200) {
+      setIsAddEventModalOpen(false);
+    }
+  };
+
   useEffect(() => {
-    console.log(userMeetingList);
+    console.log(newEvent);
     getUserMeetings();
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -238,17 +325,24 @@ const Calendar = () => {
                     inputType='text'
                     placeholderText='Unesite naziv događaja'
                     customStyles={'text-sm outline-none'}
+                    handleChange={(e) =>
+                      setNewEvent({ ...newEvent, title: e.target.value })
+                    }
                   />
                   <FormInput
                     inputName='Opis događaja'
                     inputType='text'
                     placeholderText='Unesite opis događaja'
                     customStyles={'text-sm outline-none'}
+                    handleChange={(e) =>
+                      setNewEvent({ ...newEvent, description: e.target.value })
+                    }
                   />
                   <FormInput
                     inputName='Datum'
                     inputType='date'
                     customStyles={'text-sm outline-none'}
+                    handleChange={(e) => handleDateChange(e)}
                   />
                   <div className='w-full flex space-x-2'>
                     <div className='w-1/2'>
@@ -257,6 +351,7 @@ const Calendar = () => {
                         inputType='time'
                         placeholderText='Unesite opis događaja'
                         customStyles={'text-sm outline-none w-full'}
+                        handleChange={(e) => handleStartTimeChange(e)}
                       />
                     </div>
                     <div className='w-1/2'>
@@ -265,14 +360,88 @@ const Calendar = () => {
                         inputType='time'
                         placeholderText='Unesite opis događaja'
                         customStyles={'text-sm outline-none w-full'}
+                        handleChange={(e) => handleEndTimeChange(e)}
                       />
                     </div>
                   </div>
-                  <FormInput
-                    inputName='Dodaj učesnike'
-                    inputType='text'
-                    customStyles={'text-sm outline-none'}
-                  />
+                  <div className='relative'>
+                    <FormInput
+                      inputName='Dodaj učesnike'
+                      inputType='text'
+                      customStyles={'text-sm outline-none'}
+                      handleChange={findParticipants}
+                      inputValue={query}
+                    />
+                    {searchedUsers.length > 0 && (
+                      <div className='absolute z-50 bg-white w-full py-2 shadow-md rounded-lg'>
+                        {searchedUsers.map((user) => {
+                          const isUserAdded =
+                            newEvent?.participantsIds.includes(user.id);
+
+                          return isUserAdded ? (
+                            <div
+                              key={user.id}
+                              className='opacity-60 px-4 py-1 flex items-center space-x-2 bg-slate-200 cursor-not-allowed'
+                            >
+                              <div className='w-8 h-8 bg-blue-600 rounded-full overflow-hidden'>
+                                <img
+                                  src={icons.slika}
+                                  className='w-full h-full'
+                                />
+                              </div>
+                              <div>
+                                <p className='text-sm font-medium'>
+                                  {user.name}
+                                </p>
+                                <p className='text-xs'>{user.email}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => handleAddParticipant(user)}
+                              key={user.id}
+                              className='px-4 py-1 flex items-center space-x-2 hover:bg-slate-200 cursor-pointer'
+                            >
+                              <div className='w-8 h-8 bg-blue-600 rounded-full overflow-hidden'>
+                                <img
+                                  src={icons.slika}
+                                  className='w-full h-full'
+                                />
+                              </div>
+                              <div>
+                                <p className='text-sm font-medium'>
+                                  {user.name}
+                                </p>
+                                <p className='text-xs'>{user.email}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {newEvent.participants?.length > 0 && (
+                      <div className='py-2'>
+                        {newEvent.participants.map((user) => (
+                          <div
+                            onClick={() => handleAddParticipant(user.id)}
+                            key={user.id}
+                            className='px-2 py-1 flex items-center space-x-2 hover:bg-slate-100 cursor-pointer'
+                          >
+                            <div className='w-8 h-8 bg-blue-600 rounded-full overflow-hidden'>
+                              <img
+                                src={icons.slika}
+                                className='w-full h-full'
+                              />
+                            </div>
+                            <div>
+                              <p className='text-sm font-medium'>{user.name}</p>
+                              <p className='text-xs'>{user.email}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className='px-4 pt-2 flex items-center justify-end space-x-2'>
                   <div
@@ -281,7 +450,10 @@ const Calendar = () => {
                   >
                     Otkaži
                   </div>
-                  <div className='flex items-center justify-center  min-w-[80px] w-[50px] border-[1px] border-blue-600 bg-blue-600 rounded-lg py-1 text-white text-sm font-medium cursor-pointer'>
+                  <div
+                    onClick={handleAddNewEvent}
+                    className='flex items-center justify-center  min-w-[80px] w-[50px] border-[1px] border-blue-600 bg-blue-600 rounded-lg py-1 text-white text-sm font-medium cursor-pointer'
+                  >
                     Dodaj
                   </div>
                 </div>
@@ -444,11 +616,13 @@ const Calendar = () => {
                                         className='w-full h-full object-cover'
                                       />
                                     </div>
-                                    <div className=' h-5 flex items-center justify-center bg-blue-100 overflow-hidden rounded-full border-[1px] border-white'>
-                                      <p className='text-xs text-blue-600 px-1.5'>
-                                        5+
-                                      </p>
-                                    </div>
+                                    {meet.participants.length > 2 && (
+                                      <div className=' h-5 flex items-center justify-center bg-blue-100 overflow-hidden rounded-full border-[1px] border-white'>
+                                        <p className='text-xs text-blue-600 px-1.5'>
+                                          {meet.participants.length - 2}+
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>

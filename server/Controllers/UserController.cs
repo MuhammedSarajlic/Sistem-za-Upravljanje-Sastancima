@@ -36,6 +36,13 @@ public class UserController : ControllerBase
         await userService.CreateUser(user);
     }
 
+    [HttpGet]
+    [Route("find/{email}")]
+    public async Task<List<User>> FindUserByEmail([FromRoute] string email){
+        var res = await userService.FindUserByEmail(email);
+        return res;
+    }
+
     [HttpPut]
     [Route("update")]
     public async Task UpdateUser(User user){

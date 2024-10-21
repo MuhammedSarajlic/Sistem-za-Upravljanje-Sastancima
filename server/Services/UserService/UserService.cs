@@ -33,6 +33,15 @@ public class UserService : IUserService
         return user;
     }
 
+    public async Task<List<User>> FindUserByEmail(string email)
+    {
+        return await _context.Users
+            .Where(u => u.Email.Contains(email))
+            .Take(3)                              
+            .ToListAsync();
+    }
+
+
     public async Task<User> UpdateUser(User user)
     {
         _context.Users.Update(user);

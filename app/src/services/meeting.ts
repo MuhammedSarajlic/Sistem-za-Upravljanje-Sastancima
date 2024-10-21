@@ -1,3 +1,4 @@
+import { TNewEvent } from '../types/types';
 import api from '../utils/api';
 
 export async function getCurrentUserMeetingsByDate(
@@ -11,5 +12,10 @@ export async function getCurrentUserMeetingsByDate(
       endDate,
     },
   });
+  return response;
+}
+
+export async function addNewEvent(event: TNewEvent) {
+  const response = await api.post(`/meetings/create`, event);
   return response;
 }
