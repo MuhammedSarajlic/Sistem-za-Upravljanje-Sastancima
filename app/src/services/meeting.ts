@@ -19,3 +19,8 @@ export async function addNewEvent(event: TNewEvent) {
   const response = await api.post(`/meetings/create`, event);
   return response;
 }
+
+export async function removeEvent(eventId: string) {
+  const response = await api.delete(`/meetings/delete/${eventId}`);
+  return response;
+}

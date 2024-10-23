@@ -37,6 +37,8 @@ export type TNewEvent = {
   participants?: [
     {
       id: string;
+      name: string;
+      email: string;
     }
   ];
 };

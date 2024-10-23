@@ -14,6 +14,8 @@ import event from '../assets/events.png';
 import addUser from '../assets/add-user.png';
 import close from '../assets/close.png';
 import addEvent from '../assets/add-event.png';
+import remove from '../assets/delete.png';
+import edit from '../assets/edit.png';
 
 export default {
   google,
@@ -32,4 +34,6 @@ export default {
   addUser,
   close,
   addEvent,
+  remove,
+  edit,
 };

@@ -1,23 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import { dayNames } from '../constants/days';
 import icons from '../constants/icons';
-import { addNewEvent, getCurrentUserMeetingsByDate } from '../services/meeting';
+import {
+  addNewEvent,
+  getCurrentUserMeetingsByDate,
+  removeEvent,
+} from '../services/meeting';
 import { useGlobalContext } from '../context/GlobalProvider';
 import { TMeeting, TNewEvent, TUser } from '../types/types';
 import FormInput from '../components/FormInput';
 import { monthTranslations } from '../constants/months';
 import { findUserByEmail } from '../services/user';
+import CalendarMeetCard from '../components/CalendarMeetCard';
+import SearchedUserItem from '../components/SearchedUserItem';
+import useOnClickOutside from '../hooks/useOnClickOutside';
 
 const Calendar = () => {
   const currentDate = new Date();
   const currentDay = currentDate.getDate();
+  const addEventRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weekOffset, setWeekOffset] = useState(0);
   const [userMeetingList, setUserMeetingList] = useState<[] | TMeeting[]>([]);
   const { user } = useGlobalContext();
   const [isAddEventModalOpen, setIsAddEventModalOpen] =
     useState<boolean>(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
   const [newEvent, setNewEvent] = useState<TNewEvent>({
     title: '',
     description: '',
@@ -28,6 +37,7 @@ const Calendar = () => {
   });
   const [searchedUsers, setSearchedUsers] = useState<TUser[] | []>([]);
   const [query, setQuery] = useState<string>('');
+  useOnClickOutside(addEventRef, setIsAddEventModalOpen);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -185,10 +195,29 @@ const Calendar = () => {
   };
 
   const handleAddNewEvent = async () => {
+    console.log(newEvent);
+
     const res = await addNewEvent(newEvent);
     console.log(res);
     if (res.status === 200) {
+      setNewEvent({
+        title: '',
+        description: '',
+        startTime: '',
+        endTime: '',
+        participantsIds: [],
+        participants: [],
+      });
       setIsAddEventModalOpen(false);
+      getUserMeetings();
+    }
+  };
+
+  const handleRemoveMeet = async (meetId: string) => {
+    const res = await removeEvent(meetId);
+    console.log(res);
+    if (res.status === 200) {
+      getUserMeetings();
     }
   };
 
@@ -299,7 +328,10 @@ const Calendar = () => {
               Kreiraj događaj
             </div>
             {isAddEventModalOpen && (
-              <div className='top-36 right-4 z-50 absolute bg-white rounded-lg py-2 shadow-md border-[1px]'>
+              <div
+                ref={addEventRef}
+                className='top-36 right-4 z-50 absolute bg-white rounded-lg py-2 shadow-md border-[1px]'
+              >
                 <div className='flex items-center justify-between space-x-3 px-4 pb-2 border-b-[1px]'>
                   <div className='flex items-center space-x-3'>
                     <div className='flex items-center justify-center p-2 border-[1px] rounded-md'>
@@ -313,7 +345,17 @@ const Calendar = () => {
                     </div>
                   </div>
                   <div
-                    onClick={() => setIsAddEventModalOpen(false)}
+                    onClick={() => {
+                      setNewEvent({
+                        title: '',
+                        description: '',
+                        startTime: '',
+                        endTime: '',
+                        participantsIds: [],
+                        participants: [],
+                      });
+                      setIsAddEventModalOpen(false);
+                    }}
                     className='flex items-center justify-center w-7 h-7 cursor-pointer'
                   >
                     <img src={icons.close} className='w-3 h-3' />
@@ -379,6 +421,10 @@ const Calendar = () => {
                             newEvent?.participantsIds.includes(user.id);
 
                           return isUserAdded ? (
+                            // <SearchedUserItem
+                            //   user={user}
+                            //   customStyles='opacity-60 cursor-not-allowed bg-slate-200'
+                            // />
                             <div
                               key={user.id}
                               className='opacity-60 px-4 py-1 flex items-center space-x-2 bg-slate-200 cursor-not-allowed'
@@ -397,6 +443,11 @@ const Calendar = () => {
                               </div>
                             </div>
                           ) : (
+                            // <SearchedUserItem
+                            //   user={user}
+                            //   customStyles=''
+                            //   handleClick={() => handleAddParticipant(user)}
+                            // />
                             <div
                               onClick={() => handleAddParticipant(user)}
                               key={user.id}
@@ -419,33 +470,46 @@ const Calendar = () => {
                         })}
                       </div>
                     )}
-                    {newEvent.participants?.length > 0 && (
-                      <div className='py-2'>
-                        {newEvent.participants.map((user) => (
-                          <div
-                            onClick={() => handleAddParticipant(user.id)}
-                            key={user.id}
-                            className='px-2 py-1 flex items-center space-x-2 hover:bg-slate-100 cursor-pointer'
-                          >
-                            <div className='w-8 h-8 bg-blue-600 rounded-full overflow-hidden'>
-                              <img
-                                src={icons.slika}
-                                className='w-full h-full'
-                              />
+                    {newEvent.participants &&
+                      newEvent.participants.length > 0 && (
+                        <div className='py-2'>
+                          {newEvent.participants.map((user) => (
+                            // <SearchedUserItem user={user} customStyles='px-2' />
+                            <div
+                              key={user.id}
+                              className='px-2 py-1 flex items-center space-x-2 hover:bg-slate-100 cursor-pointer'
+                            >
+                              <div className='w-8 h-8 bg-blue-600 rounded-full overflow-hidden'>
+                                <img
+                                  src={icons.slika}
+                                  className='w-full h-full'
+                                />
+                              </div>
+                              <div>
+                                <p className='text-sm font-medium'>
+                                  {user.name}
+                                </p>
+                                <p className='text-xs'>{user.email}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className='text-sm font-medium'>{user.name}</p>
-                              <p className='text-xs'>{user.email}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
                   </div>
                 </div>
                 <div className='px-4 pt-2 flex items-center justify-end space-x-2'>
                   <div
-                    onClick={() => setIsAddEventModalOpen(false)}
+                    onClick={() => {
+                      setNewEvent({
+                        title: '',
+                        description: '',
+                        startTime: '',
+                        endTime: '',
+                        participantsIds: [],
+                        participants: [],
+                      });
+                      setIsAddEventModalOpen(false);
+                    }}
                     className='flex items-center justify-center min-w-[80px] border-[2px] border-blue-600 rounded-lg py-1 text-blue-600 cursor-pointer text-sm font-medium'
                   >
                     Otkaži
@@ -574,58 +638,13 @@ const Calendar = () => {
                             meetDate.getHours() === hour
                           ) {
                             return (
-                              <div
+                              <CalendarMeetCard
                                 key={meet.id}
-                                className='z-10 overflow-hidden absolute w-full border-[2px] border-blue-500 bg-blue-100 rounded-lg flex-col px-1 space-y-1'
-                                style={{
-                                  top: `${(minutesStart / 60) * 100}%`,
-                                  height: `${(durationMinutes / 60) * 100}%`,
-                                }}
-                              >
-                                <p className='text-blue-500 text-sm font-medium line-clamp-2'>
-                                  {meet.title}
-                                </p>
-                                <p className='text-xs text-blue-500'>
-                                  {new Date(meet.startTime)
-                                    .toLocaleTimeString([], {
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                    })
-                                    .replace(' ', '')
-                                    .toLowerCase()}
-                                  -
-                                  {new Date(meet.endTime)
-                                    .toLocaleTimeString([], {
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                    })
-                                    .replace(' ', '')
-                                    .toLowerCase()}
-                                </p>
-                                <div className='flex items-center space-x-2'>
-                                  <div className='flex items-center -space-x-1.5'>
-                                    <div className='w-5 h-5 overflow-hidden rounded-full border-[1px] border-blue-100'>
-                                      <img
-                                        src={icons.slika}
-                                        className='w-full h-full object-cover'
-                                      />
-                                    </div>
-                                    <div className='w-5 h-5 overflow-hidden rounded-full border-[1px] border-blue-100'>
-                                      <img
-                                        src={icons.slika}
-                                        className='w-full h-full object-cover'
-                                      />
-                                    </div>
-                                    {meet.participants.length > 2 && (
-                                      <div className=' h-5 flex items-center justify-center bg-blue-100 overflow-hidden rounded-full border-[1px] border-white'>
-                                        <p className='text-xs text-blue-600 px-1.5'>
-                                          {meet.participants.length - 2}+
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
+                                meet={meet}
+                                minutesStart={minutesStart}
+                                durationMinutes={durationMinutes}
+                                handleRemoveMeet={handleRemoveMeet}
+                              />
                             );
                           }
 
